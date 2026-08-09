@@ -282,7 +282,8 @@ bool AxialIntegration::run(Communicator *comm, ShapeGraph &map, bool simple_vers
         pflipper<std::vector<std::pair<int, int>>> foundlist;
         foundlist.a().push_back(std::pair<int, int>(i, -1));
         covered[i] = true;
-        int total_depth = 0, depth = 1, node_count = 1, pos = -1, previous = -1; // node_count includes this 1
+        int total_depth = 0, depth = 1, max_depth = 0, node_count = 1, pos = -1,
+            previous = -1; // node_count includes this 1
         double weight = 0.0, rootweight = 0.0, total_weight = 0.0, w_total_depth = 0.0;
         if (m_weighted_measure_col != -1) {
             rootweight = weights[i];
@@ -331,6 +332,7 @@ bool AxialIntegration::run(Communicator *comm, ShapeGraph &map, bool simple_vers
                             }
                         }
                         total_depth += depth;
+                        max_depth = depth;
                         node_count++;
                         depthcounts.back() += 1;
                     }
@@ -367,7 +369,7 @@ bool AxialIntegration::run(Communicator *comm, ShapeGraph &map, bool simple_vers
                     double ra = 2.0 * (mean_depth - 1.0) / double(node_count - 2);
                     // d-value / p-value from Depthmap 4 manual, note: node_count includes this one
                     double rra_d = ra / dvalue(node_count);
-                    double rra_p = ra / dvalue(node_count);
+                    double rra_p = ra / pvalue(node_count);
                     double integ_tk = teklinteg(node_count, total_depth);
                     row.setValue(integ_dv_col[r], float(1.0 / rra_d));
 
@@ -391,7 +393,7 @@ bool AxialIntegration::run(Communicator *comm, ShapeGraph &map, bool simple_vers
                         if (!simple_version) {
                             // alan's palm-tree normalisation: palmtree
                             double dmin = node_count - 1;
-                            double dmax = palmtree(node_count, depth - 1);
+                            double dmax = palmtree(node_count, max_depth);
                             if (dmax != dmin) {
                                 row.setValue(penn_norm_col[r], float((dmax - total_depth) / (dmax - dmin)));
                             }

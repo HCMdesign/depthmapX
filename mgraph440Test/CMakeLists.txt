@@ -1,6 +1,7 @@
 set(mgraph440Test mgraph440Test)
 set(mgraph440Test_SRCS
     main.cpp
+    testattributes.cpp
     testcontainers.cpp
     testconverters.cpp)
 

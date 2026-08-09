@@ -3,7 +3,7 @@
 // Paf Template Library --- a set of useful C++ templates
 //
 // Copyright (c) 1996-2011 Alasdair Turner (a.turner@ucl.ac.uk)
-//
+// Copyright (c) 2011-2026 Tasos Varoudis
 //-----------------------------------------------------------------------------
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -104,16 +104,16 @@ inline double teklinteg(double nodecount, double totaldepth)
    return ln(0.5 * (nodecount - 2.0)) / ln(double(totaldepth - nodecount + 1));
 }
 
-// Penn palmtree
+// Maximum total depth for a rooted graph with n nodes and maximum shortest-path depth r.
+// A radius above n - 1 saturates at the path-graph maximum.
 
 inline double palmtree(double n, double r)
 {
-   if (n > r) {
-      return r * (n - 0.5 * (r+1));
+   if (n <= 1.0 || r <= 0.0) {
+      return 0.0;
    }
-   else {
-      return 0.5 * n * (n - 1);
-   }
+   const double radius = r < n - 1.0 ? r : n - 1.0;
+   return radius * (n - 0.5 * (radius + 1.0));
 }
 
 double poisson(int x, double lambda);

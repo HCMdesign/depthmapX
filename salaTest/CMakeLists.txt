@@ -4,6 +4,7 @@ set(salaTest_SRCS
     main.cpp
     testentityparsing.cpp
     testpointmap.cpp
+    testpennmeasures.cpp
     testlinkutils.cpp
     testgridproperties.cpp
     testisovistdef.cpp

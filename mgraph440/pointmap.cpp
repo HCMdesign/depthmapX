@@ -1,3 +1,4 @@
+// Copyright (c) 2011-2026 Tasos Varoudis
 #include "mgraph440/pointmap.h"
 #include "mgraph440/containerutils.h"
 
@@ -249,6 +250,7 @@ void PointMap::convertAttributes(int which_attributes)
       }
    }
    if (which_attributes & GraphVertexList::METRIC) {
+      int penn_col = m_attributes.insertColumn("Metric Mean Penn Distance");
       int mspa_col = m_attributes.insertColumn("Metric Mean Shortest-Path Angle");
       int mspl_col = m_attributes.insertColumn("Metric Mean Shortest-Path Distance");
       int dist_col = m_attributes.insertColumn("Metric Mean Straight-Line Distance");
@@ -265,8 +267,28 @@ void PointMap::convertAttributes(int which_attributes)
                m_attributes.setValue(row, mspl_col, float(val));
                val = m_points[i][j].getAttributes().getAttr(AttrHeader::TOTAL_EUCLID_DIST) / total;
                m_attributes.setValue(row, dist_col, float(val));
+               val = m_points[i][j].getAttributes().getAttr(AttrHeader::MEAN_PENN_DIST);
+               m_attributes.setValue(row, penn_col, float(val));
                //
                m_attributes.setValue(row, count_col, float(total));
+            }
+         }
+      }
+   }
+   if (which_attributes & GraphVertexList::METRICPOINTDEPTH) {
+      int penn_col = m_attributes.insertColumn("Metric Step Penn Distance");
+      int angle_col = m_attributes.insertColumn("Metric Step Shortest-Path Angle");
+      int length_col = m_attributes.insertColumn("Metric Step Shortest-Path Length");
+      int dist_col = m_attributes.insertColumn("Metric Straight-Line Distance");
+      for (int i = 0; i < m_cols; i++) {
+         for (int j = 0; j < m_rows; j++) {
+            if (m_points[i][j].m_attributes) {
+               int row = m_attributes.getRowid(PixelRef(i,j));
+               const AttrBody &attributes = m_points[i][j].getAttributes();
+               m_attributes.setValue(row, penn_col, float(attributes.getAttr(AttrHeader::POINT_PENN_DIST)));
+               m_attributes.setValue(row, angle_col, float(attributes.getAttr(AttrHeader::METRIC_POINT_ANGLE)));
+               m_attributes.setValue(row, length_col, float(attributes.getAttr(AttrHeader::METRIC_POINT_DEPTH)));
+               m_attributes.setValue(row, dist_col, float(attributes.getAttr(AttrHeader::POINT_EUCLID_DIST)));
             }
          }
       }

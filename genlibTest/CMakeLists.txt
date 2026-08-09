@@ -5,6 +5,7 @@ set(genlibTest_SRCS
     testsimplematrix.cpp
     testbspnode.cpp
     teststringutils.cpp
+    testpafmath.cpp
     testcontainerutils.cpp)
 
 set(LINK_LIBS

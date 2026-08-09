@@ -1,5 +1,5 @@
 // sala - a component of the depthmapX - spatial network analysis platform
-// Copyright (C) 2011-2012, Tasos Varoudis
+// Copyright (C) 2011-2026, Tasos Varoudis
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -152,7 +152,8 @@ double AttrHeader::getAttr(int attr, const AttrVal attributes[]) const
       }
       break;
    case MEAN_PENN_DIST:
-      if (attributes[METRIC_GRAPH_SIZE].intval > 1) {
+      if (attributes[METRIC_GRAPH_SIZE].intval > 1 && attributes[TOTAL_METRIC_DEPTH].floatval >= 0.0f &&
+          attributes[TOTAL_EUCLID_DIST].floatval >= 0.0f) {
          if (attributes[TOTAL_METRIC_DEPTH].floatval > attributes[TOTAL_EUCLID_DIST].floatval) {
             val = double(attributes[TOTAL_METRIC_DEPTH].floatval - attributes[TOTAL_EUCLID_DIST].floatval)
                   / double(attributes[METRIC_GRAPH_SIZE].intval);
@@ -166,7 +167,7 @@ double AttrHeader::getAttr(int attr, const AttrVal attributes[]) const
       }
       break;
    case POINT_PENN_DIST:
-      if (attributes[METRIC_POINT_DEPTH].floatval >= 0.0) {
+      if (attributes[METRIC_POINT_DEPTH].floatval >= 0.0f && attributes[POINT_EUCLID_DIST].floatval >= 0.0f) {
          if (attributes[METRIC_POINT_DEPTH].floatval > attributes[POINT_EUCLID_DIST].floatval) {
             val = attributes[METRIC_POINT_DEPTH].floatval - attributes[POINT_EUCLID_DIST].floatval;
          }

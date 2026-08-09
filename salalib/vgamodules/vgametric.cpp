@@ -1,6 +1,6 @@
 // sala - a component of the depthmapX - spatial network analysis platform
 // Copyright (C) 2000-2010, University College London, Alasdair Turner
-// Copyright (C) 2011-2012, Tasos Varoudis
+// Copyright (C) 2011-2026, Tasos Varoudis
 // Copyright (C) 2017-2018, Petros Koutsolampros
 
 // This program is free software: you can redistribute it and/or modify
@@ -19,6 +19,8 @@
 #include "salalib/vgamodules/vgametric.h"
 
 #include "genlib/stringutils.h"
+
+#include <algorithm>
 
 // This is a slow algorithm, but should give the correct answer
 // for demonstrative purposes
@@ -43,6 +45,8 @@ bool VGAMetric::run(Communicator *comm, PointMap &map, bool) {
     AttributeTable &attributes = map.getAttributeTable();
 
     // n.b. these must be entered in alphabetical order to preserve col indexing:
+    std::string penn_col_text = std::string("Metric Mean Penn Distance") + radius_text;
+    int penn_col = attributes.insertOrResetColumn(penn_col_text.c_str());
     std::string mspa_col_text = std::string("Metric Mean Shortest-Path Angle") + radius_text;
     int mspa_col = attributes.insertOrResetColumn(mspa_col_text.c_str());
     std::string mspl_col_text = std::string("Metric Mean Shortest-Path Distance") + radius_text;
@@ -114,6 +118,10 @@ bool VGAMetric::run(Communicator *comm, PointMap &map, bool) {
                 row.setValue(mspa_col, float(double(total_angle) / double(total_nodes)));
                 row.setValue(mspl_col, float(double(total_depth) / double(total_nodes)));
                 row.setValue(dist_col, float(double(euclid_depth) / double(total_nodes)));
+                // This is the legacy Mean Penn Distance formula. The root contributes zero to both
+                // totals and is included in total_nodes for compatibility with historic output.
+                row.setValue(penn_col, float(std::max(0.0, double(total_depth - euclid_depth)) /
+                                             double(total_nodes)));
                 row.setValue(count_col, float(total_nodes));
 
                 count++; // <- increment count

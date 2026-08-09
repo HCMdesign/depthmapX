@@ -1,6 +1,6 @@
 // sala - a component of the depthmapX - spatial network analysis platform
 // Copyright (C) 2000-2010, University College London, Alasdair Turner
-// Copyright (C) 2011-2012, Tasos Varoudis
+// Copyright (C) 2011-2026, Tasos Varoudis
 // Copyright (C) 2017-2018, Petros Koutsolampros
 
 // This program is free software: you can redistribute it and/or modify
@@ -20,11 +20,17 @@
 
 #include "genlib/stringutils.h"
 
+#include <algorithm>
+
 bool VGAMetricDepth::run(Communicator *, PointMap &map, bool) {
 
     AttributeTable &attributes = map.getAttributeTable();
 
     // n.b., insert columns sets values to -1 if the column already exists
+    int penn_dist_col = -1;
+    if (map.getSelSet().size() == 1) {
+        penn_dist_col = attributes.insertOrResetColumn("Metric Step Penn Distance");
+    }
     int path_angle_col = attributes.insertOrResetColumn("Metric Step Shortest-Path Angle");
     int path_length_col = attributes.insertOrResetColumn("Metric Step Shortest-Path Length");
     int dist_col = -1;
@@ -40,7 +46,7 @@ bool VGAMetricDepth::run(Communicator *, PointMap &map, bool) {
         map.getPoint(pix).m_cumangle = 0.0f;
     }
 
-    // in order to calculate Penn angle, the MetricPair becomes a metric triple...
+    // The previous pixel in each triple is used to accumulate the angle along the metric shortest path.
     std::set<MetricTriple> search_list; // contains root point
 
     for (auto &sel : map.getSelSet()) {
@@ -59,11 +65,15 @@ bool VGAMetricDepth::run(Communicator *, PointMap &map, bool) {
             p.getNode().extractMetric(search_list, &map, here);
             p.m_misc = ~0;
             AttributeRow &row = map.getAttributeTable().getRow(AttributeKey(here.pixel));
-            row.setValue(path_length_col, float(map.getSpacing() * here.dist));
+            const float path_length = float(map.getSpacing() * here.dist);
+            row.setValue(path_length_col, path_length);
             row.setValue(path_angle_col, float(p.m_cumangle));
             if (map.getSelSet().size() == 1) {
                 // Note: Euclidean distance is currently only calculated from a single point
-                row.setValue(dist_col, float(map.getSpacing() * dist(here.pixel, *map.getSelSet().begin())));
+                const float straight_line_distance =
+                    float(map.getSpacing() * dist(here.pixel, *map.getSelSet().begin()));
+                row.setValue(dist_col, straight_line_distance);
+                row.setValue(penn_dist_col, std::max(0.0f, path_length - straight_line_distance));
             }
             if (!p.getMergePixel().empty()) {
                 Point &p2 = map.getPoint(p.getMergePixel());
@@ -71,12 +81,16 @@ bool VGAMetricDepth::run(Communicator *, PointMap &map, bool) {
                     p2.m_cumangle = p.m_cumangle;
                     AttributeRow &mergePixelRow =
                         map.getAttributeTable().getRow(AttributeKey(p.getMergePixel()));
-                    mergePixelRow.setValue(path_length_col, float(map.getSpacing() * here.dist));
+                    const float path_length = float(map.getSpacing() * here.dist);
+                    mergePixelRow.setValue(path_length_col, path_length);
                     mergePixelRow.setValue(path_angle_col, float(p2.m_cumangle));
                     if (map.getSelSet().size() == 1) {
                         // Note: Euclidean distance is currently only calculated from a single point
-                        mergePixelRow.setValue(
-                            dist_col, float(map.getSpacing() * dist(p.getMergePixel(), *map.getSelSet().begin())));
+                        const float straight_line_distance =
+                            float(map.getSpacing() * dist(p.getMergePixel(), *map.getSelSet().begin()));
+                        mergePixelRow.setValue(dist_col, straight_line_distance);
+                        mergePixelRow.setValue(penn_dist_col,
+                                               std::max(0.0f, path_length - straight_line_distance));
                     }
                     p2.getNode().extractMetric(search_list, &map, MetricTriple(here.dist, p.getMergePixel(), NoPixel));
                     p2.m_misc = ~0;
